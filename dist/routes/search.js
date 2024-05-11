@@ -18,10 +18,24 @@ const client_1 = require("@prisma/client");
 const middleware_1 = require("../middleware/middleware");
 exports.searchRouter = express_1.default.Router();
 const prisma = new client_1.PrismaClient();
+// Function to calculate spam likelihood based on the given phoneNumber
+const calculateSpamLikelihood = (phoneNumber) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Find the spam record by phoneNumber
+        const spamRecord = yield prisma.spam.findFirst({
+            where: { phoneNumber },
+        });
+        return spamRecord ? spamRecord.likelihood : 0;
+    }
+    catch (error) {
+        console.error('Error calculating spam likelihood:', error);
+        return 0;
+    }
+});
 // Endpoint to search for a person by name
 exports.searchRouter.get('/search/name/:name', middleware_1.verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name } = req.params;
     try {
+        const { name } = req.params;
         // Search for users whose names start with the search query
         const startsWithNameUser = yield prisma.user.findMany({
             where: {
@@ -85,8 +99,8 @@ exports.searchRouter.get('/search/name/:name', middleware_1.verifyToken, (req, r
 }));
 // Endpoint to search for a person by phone number
 exports.searchRouter.get('/search/phoneNumber/:phoneNumber', middleware_1.verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { phoneNumber } = req.params;
     try {
+        const { phoneNumber } = req.params;
         // Search for users with the given phone number
         const usersWithPhoneNumber = yield prisma.user.findMany({
             where: {
@@ -115,8 +129,8 @@ exports.searchRouter.get('/search/phoneNumber/:phoneNumber', middleware_1.verify
 }));
 // Endpoint to get detailed information for a search result
 exports.searchRouter.get('/search/detail/:phoneNumber', middleware_1.verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { phoneNumber } = req.params;
     try {
+        const { phoneNumber } = req.params;
         // Find the user by phoneNumber
         const user = yield prisma.user.findUnique({
             where: { phoneNumber },
@@ -132,8 +146,7 @@ exports.searchRouter.get('/search/detail/:phoneNumber', middleware_1.verifyToken
                     name: contact.name,
                     phoneNumber: contact.phoneNumber,
                     email: null,
-                    spamLikelihood: null,
-                    isContact: false, // Assuming we're not considering contacts of contacts here
+                    spamLikelihood: yield calculateSpamLikelihood(contact.phoneNumber),
                 });
             }
         }
@@ -143,12 +156,11 @@ exports.searchRouter.get('/search/detail/:phoneNumber', middleware_1.verifyToken
         });
         // Construct the result object
         const result = {
-            id: user ? user.id : null,
-            name: user ? user.name : null,
-            phoneNumber: user ? user.phoneNumber : null,
+            id: user ? user.id : spamRecord === null || spamRecord === void 0 ? void 0 : spamRecord.id,
+            name: user ? user.name : spamRecord === null || spamRecord === void 0 ? void 0 : spamRecord.name,
+            phoneNumber: user ? user.phoneNumber : spamRecord === null || spamRecord === void 0 ? void 0 : spamRecord.phoneNumber,
             email: user ? user.email : null,
-            spamLikelihood: spamRecord ? spamRecord.likelihood : null,
-            isContact: false, // Assuming we're not considering contacts of contacts here
+            spamLikelihood: yield calculateSpamLikelihood(phoneNumber),
         };
         res.json(result);
     }

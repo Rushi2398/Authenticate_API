@@ -23,3 +23,10 @@ export const markSpamSchema = z.object({
     }),
 });
 
+export const userLoginSchema = z.object({
+    phoneNumber: z.string().min(1).refine((val) => phoneNum.test(val), {
+        message: 'Invalid phone number. Must be 10 digits without spaces or special characters.',
+    }),
+    password: z.string().min(1)
+})
+

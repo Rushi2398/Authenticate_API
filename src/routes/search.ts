@@ -6,11 +6,24 @@ export const searchRouter = express.Router();
 
 const prisma = new PrismaClient();
 
+// Function to calculate spam likelihood based on the given phoneNumber
+const calculateSpamLikelihood = async (phoneNumber: string) => {
+    try {
+        // Find the spam record by phoneNumber
+        const spamRecord = await prisma.spam.findFirst({
+            where: { phoneNumber },
+        });
+        return spamRecord ? spamRecord.likelihood : 0;
+    } catch (error) {
+        console.error('Error calculating spam likelihood:', error);
+        return 0;
+    }
+};
+
 // Endpoint to search for a person by name
 searchRouter.get('/search/name/:name', verifyToken, async (req: Request, res: Response) => {
-    const { name } = req.params;
-
     try {
+        const { name } = req.params;
         // Search for users whose names start with the search query
         const startsWithNameUser = await prisma.user.findMany({
             where: {
@@ -80,9 +93,8 @@ searchRouter.get('/search/name/:name', verifyToken, async (req: Request, res: Re
 
 // Endpoint to search for a person by phone number
 searchRouter.get('/search/phoneNumber/:phoneNumber', verifyToken, async (req: Request, res: Response) => {
-    const { phoneNumber } = req.params;
-
     try {
+        const { phoneNumber } = req.params;
         // Search for users with the given phone number
         const usersWithPhoneNumber = await prisma.user.findMany({
             where: {
@@ -114,9 +126,8 @@ searchRouter.get('/search/phoneNumber/:phoneNumber', verifyToken, async (req: Re
 
 // Endpoint to get detailed information for a search result
 searchRouter.get('/search/detail/:phoneNumber', verifyToken, async (req: Request, res: Response) => {
-    const { phoneNumber } = req.params;
-
     try {
+        const { phoneNumber } = req.params;
         // Find the user by phoneNumber
         const user = await prisma.user.findUnique({
             where: { phoneNumber },
@@ -134,8 +145,7 @@ searchRouter.get('/search/detail/:phoneNumber', verifyToken, async (req: Request
                     name: contact.name,
                     phoneNumber: contact.phoneNumber,
                     email: null,
-                    spamLikelihood: null,
-                    isContact: false, // Assuming we're not considering contacts of contacts here
+                    spamLikelihood: await calculateSpamLikelihood(contact.phoneNumber),
                 });
             }
         }
@@ -147,12 +157,11 @@ searchRouter.get('/search/detail/:phoneNumber', verifyToken, async (req: Request
 
         // Construct the result object
         const result = {
-            id: user ? user.id : null,
-            name: user ? user.name : null,
-            phoneNumber: user ? user.phoneNumber : null,
+            id: user ? user.id : spamRecord?.id,
+            name: user ? user.name : spamRecord?.name,
+            phoneNumber: user ? user.phoneNumber : spamRecord?.phoneNumber,
             email: user ? user.email : null,
-            spamLikelihood: spamRecord ? spamRecord.likelihood : null,
-            isContact: false, // Assuming we're not considering contacts of contacts here
+            spamLikelihood: await calculateSpamLikelihood(phoneNumber),
         };
 
         res.json(result);

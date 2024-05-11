@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import { PrismaClient } from '@prisma/client';
 import jwt from "jsonwebtoken"
 import { checkExistingUser } from "../middleware/middleware";
-import { userRegistrationSchema } from "../validation/zod";
+import { userLoginSchema, userRegistrationSchema } from "../validation/zod";
 import { JWT_SECRET } from "../config/config";
 
 const prisma = new PrismaClient()
@@ -35,7 +35,7 @@ registerRouter.post('/register', checkExistingUser, async (req: Request, res: Re
 // Endpoint for user login
 registerRouter.post('/login', async (req: Request, res: Response) => {
     try {
-        const { phoneNumber, password } = req.body;
+        const { phoneNumber, password } = userLoginSchema.parse(req.body);
 
         // Find user by phone number and password
         const user = await prisma.user.findFirst({

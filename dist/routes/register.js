@@ -44,7 +44,7 @@ exports.registerRouter.post('/register', middleware_1.checkExistingUser, (req, r
 // Endpoint for user login
 exports.registerRouter.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { phoneNumber, password } = req.body;
+        const { phoneNumber, password } = zod_1.userLoginSchema.parse(req.body);
         // Find user by phone number and password
         const user = yield prisma.user.findFirst({
             where: {

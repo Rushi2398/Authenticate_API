@@ -11,5 +11,12 @@
             "src": "/(.*)",
             "dest": "/dist/app.js"
         }
-    ]
+    ],
+    "hooks": {
+        "build": {
+            "before": {
+                "command": "prisma generate"
+            }
+        }
+    }
 }

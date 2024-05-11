@@ -13,6 +13,11 @@ const PORT = process.env.PORT || 3001;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use('/api', [register_1.registerRouter, search_1.searchRouter, spam_1.spamRouter]);
+app.get('/', (req, res) => {
+    res.json({
+        msg: "Welcome to Authenticate API"
+    });
+});
 app.listen(PORT, () => {
     `Server is running on ${PORT}`;
 });

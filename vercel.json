@@ -12,5 +12,5 @@
             "dest": "/dist/app.js"
         }
     ],
-    "buildCommand": "prisma generate"
+    "buildCommand": "npx prisma generate"
 }

@@ -5,7 +5,7 @@ import { searchRouter } from "./routes/search";
 import { spamRouter } from "./routes/spam";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());

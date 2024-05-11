@@ -23,20 +23,46 @@ const prisma = new client_1.PrismaClient();
 exports.spamRouter.post('/spam', middleware_1.verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { phoneNumber } = zod_1.markSpamSchema.parse(req.body);
-        const existingSpam = yield prisma.spam.findFirst({
+        let existingSpam = yield prisma.spam.findFirst({
             where: {
                 phoneNumber
-            },
+            }
         });
         if (existingSpam) {
-            return res.status(400).json({ message: 'Number already marked as spam' });
+            const totalSpamCount = yield prisma.spam.count();
+            const phoneNumberSpamCount = yield prisma.spam.count({
+                where: {
+                    phoneNumber
+                }
+            });
+            const likelihood = totalSpamCount > 0 ? phoneNumberSpamCount / totalSpamCount : 0;
+            existingSpam = yield prisma.spam.update({
+                where: {
+                    id: existingSpam.id,
+                },
+                data: {
+                    likelihood: likelihood,
+                },
+            });
+            res.json(existingSpam);
         }
-        yield prisma.spam.create({
-            data: {
-                phoneNumber
-            },
-        });
-        res.status(201).json({ message: 'Number marked as spam successfully' });
+        else {
+            const totalSpamCount = yield prisma.spam.count();
+            const likelihood = totalSpamCount > 0 ? 1 / totalSpamCount : 1;
+            const userSpam = yield prisma.user.findFirst({
+                where: {
+                    phoneNumber: req.phoneNumber
+                }
+            });
+            yield prisma.spam.create({
+                data: {
+                    phoneNumber,
+                    likelihood,
+                    userId: userSpam === null || userSpam === void 0 ? void 0 : userSpam.id
+                },
+            });
+            res.status(201).json({ message: 'Number marked as spam successfully' });
+        }
     }
     catch (error) {
         res.status(500).json({ message: 'Internal server error' });

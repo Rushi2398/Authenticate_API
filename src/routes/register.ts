@@ -51,7 +51,6 @@ registerRouter.post('/login', async (req: Request, res: Response) => {
 
         // Generate JWT token
         const token = jwt.sign({ phoneNumber }, JWT_SECRET, { expiresIn: '1h' });
-        localStorage.setItem('token', token);
         res.status(200).json({ message: 'Login successful.', token });
     } catch (error) {
         console.error(error);

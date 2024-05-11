@@ -10,22 +10,50 @@ const prisma = new PrismaClient();
 spamRouter.post('/spam', verifyToken, async (req: Request, res: Response) => {
     try {
         const { phoneNumber } = markSpamSchema.parse(req.body);
-        const existingSpam = await prisma.spam.findFirst({
+
+        let existingSpam = await prisma.spam.findFirst({
             where: {
                 phoneNumber
-            },
+            }
         });
 
         if (existingSpam) {
-            return res.status(400).json({ message: 'Number already marked as spam' });
-        }
-        await prisma.spam.create({
-            data: {
-                phoneNumber
-            },
-        });
+            const totalSpamCount = await prisma.spam.count();
+            const phoneNumberSpamCount = await prisma.spam.count({
+                where: {
+                    phoneNumber
+                }
+            });
+            const likelihood = totalSpamCount > 0 ? phoneNumberSpamCount / totalSpamCount : 0;
+            existingSpam = await prisma.spam.update({
+                where: {
+                    id: existingSpam.id,
+                },
+                data: {
+                    likelihood: likelihood,
+                },
+            });
 
-        res.status(201).json({ message: 'Number marked as spam successfully' });
+            res.json(existingSpam);
+        } else {
+            const totalSpamCount = await prisma.spam.count();
+            const likelihood = totalSpamCount > 0 ? 1 / totalSpamCount : 1;
+            const userSpam = await prisma.user.findFirst({
+                where: {
+                    phoneNumber: req.phoneNumber
+                }
+            })
+            await prisma.spam.create({
+                data: {
+                    phoneNumber,
+                    likelihood,
+                    userId: userSpam?.id
+                },
+            });
+
+            res.status(201).json({ message: 'Number marked as spam successfully' });
+        }
+
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
     }

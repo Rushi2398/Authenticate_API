@@ -31,10 +31,7 @@ exports.registerRouter.post('/register', middleware_1.checkExistingUser, (req, r
                 name: userData.name,
                 phoneNumber: userData.phoneNumber,
                 email: userData.email,
-                password: userData.password,
-                contacts: {
-                    create: userData.contacts // Create user's contacts
-                }
+                password: userData.password
             },
         });
         res.status(201).json({ message: 'User registered successfully.', token: req.token });
@@ -60,7 +57,6 @@ exports.registerRouter.post('/login', (req, res) => __awaiter(void 0, void 0, vo
         }
         // Generate JWT token
         const token = jsonwebtoken_1.default.sign({ phoneNumber }, config_1.JWT_SECRET, { expiresIn: '1h' });
-        localStorage.setItem('token', token);
         res.status(200).json({ message: 'Login successful.', token });
     }
     catch (error) {

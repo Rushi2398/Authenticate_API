@@ -9,7 +9,7 @@ const register_1 = require("./routes/register");
 const search_1 = require("./routes/search");
 const spam_1 = require("./routes/spam");
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use('/api', [register_1.registerRouter, search_1.searchRouter, spam_1.spamRouter]);

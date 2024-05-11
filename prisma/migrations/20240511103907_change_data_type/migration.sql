@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Spam" ALTER COLUMN "likelihood" SET DATA TYPE DOUBLE PRECISION;

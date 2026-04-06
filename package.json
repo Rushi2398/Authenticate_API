@@ -19,7 +19,8 @@
     "prisma": "^5.13.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
-    "zod": "^3.23.7"
+    "zod": "^3.23.7",
+    "path-to-regexp": ">=0.1.13"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
